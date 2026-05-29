@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Models\User;
 use Illuminate\Auth\Events\Lockout;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -45,7 +46,14 @@ class LoginRequest extends FormRequest
         // Kebutuhan Praktikum: Menonaktifkan rate limiting untuk simulasi Brute Force
         // $this->ensureIsNotRateLimited();
 
-        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+        // Kebutuhan Praktikum: Autentikasi plaintext password manual
+        $user = User::where('email', $this->input('email'))->first();
+
+        // Versi Aman (bawaan Laravel Breeze):
+        // if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+
+        // Versi Rentan (Plaintext Password Comparison):
+        if (! $user || $user->password !== $this->input('password')) {
             // Kebutuhan Praktikum: Menonaktifkan pencatatan percobaan gagal pada RateLimiter
             // RateLimiter::hit($this->throttleKey());
 
@@ -53,6 +61,8 @@ class LoginRequest extends FormRequest
                 'email' => trans('auth.failed'),
             ]);
         }
+
+        Auth::login($user, $this->boolean('remember'));
 
         // Kebutuhan Praktikum: Menonaktifkan pembersihan RateLimiter
         // RateLimiter::clear($this->throttleKey());
@@ -89,4 +99,3 @@ class LoginRequest extends FormRequest
         return Str::transliterate(Str::lower($this->string('email')).'|'.$this->ip());
     }
 }
-

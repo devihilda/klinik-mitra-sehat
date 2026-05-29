@@ -42,8 +42,18 @@ class ProfileController extends Controller
      */
     public function destroy(Request $request): RedirectResponse
     {
+        // Versi Aman (Menggunakan current_password untuk mencocokkan hash):
+        // $request->validateWithBag('userDeletion', [
+        //     'password' => ['required', 'current_password'],
+        // ]);
+
+        // Versi Rentan (Plaintext password comparison):
         $request->validateWithBag('userDeletion', [
-            'password' => ['required', 'current_password'],
+            'password' => ['required', function ($attribute, $value, $fail) use ($request) {
+                if ($request->user()->password !== $value) {
+                    $fail(__('auth.password'));
+                }
+            }],
         ]);
 
         $user = $request->user();

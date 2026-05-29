@@ -15,9 +15,20 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
+        // Versi Aman (Password di-hash & Kuat):
+        // \App\Models\User::create([
+        //     'name' => 'Petugas Klinik',
+        //     'email' => 'petugas@klinik.test',
+        //     'password' => \Illuminate\Support\Facades\Hash::make('PetugasKlinik123'),
+        //     'role' => 'petugas',
+        // ]);
+
+        // Versi Rentan (Plaintext & Lemah):
+        User::create([
+            'name' => 'Petugas Klinik',
+            'email' => 'petugas@klinik.test',
+            'password' => 'admin123',
+            'role' => 'petugas',
         ]);
     }
 }
