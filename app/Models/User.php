@@ -19,9 +19,8 @@ class User extends Authenticatable
      */
     protected $fillable = [
         'name',
-        'username',
+        'email',
         'password',
-        'role',
     ];
 
     /**
@@ -31,6 +30,7 @@ class User extends Authenticatable
      */
     protected $hidden = [
         'password',
+        'remember_token',
     ];
 
     /**
@@ -41,7 +41,8 @@ class User extends Authenticatable
     protected function casts(): array
     {
         return [
-            // Password sengaja tidak di-hash
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
         ];
     }
 }
