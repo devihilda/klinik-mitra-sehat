@@ -29,7 +29,7 @@ class SecurityHeaders
 
         // Apply OWASP recommended security headers
         if (! app()->environment('local')) {
-            $response->headers->set('Content-Security-Policy', "default-src 'self'; font-src 'self' https://fonts.bunny.net; style-src 'self' 'unsafe-inline' https://fonts.bunny.net; img-src 'self' data:;");
+            $response->headers->set('Content-Security-Policy', "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self';");
         }
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('X-Content-Type-Options', 'nosniff');

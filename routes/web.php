@@ -15,6 +15,24 @@ Route::get('/', function () {
     return view('welcome');
 });
 
+Route::get('/robots.txt', function () {
+    return response("User-agent: *\nDisallow:", 200)
+        ->header('Content-Type', 'text/plain; charset=UTF-8');
+});
+
+Route::get('/sitemap.xml', function () {
+    $xml = '<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+    <url>
+        <loc>' . url('/') . '</loc>
+        <changefreq>daily</changefreq>
+        <priority>1.0</priority>
+    </url>
+</urlset>';
+    return response($xml, 200)
+        ->header('Content-Type', 'application/xml; charset=UTF-8');
+});
+
 // Redirector /dashboard based on User Role (with commented-out secure and vulnerable logic)
 Route::get('/dashboard', function () {
     $user = auth()->user();

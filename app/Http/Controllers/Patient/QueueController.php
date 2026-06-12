@@ -97,30 +97,38 @@ class QueueController extends Controller
         return redirect()->route('patients.queues.index')->with('success', 'Pendaftaran antrean berhasil dilakukan.');
     }
 
-    /**
-     * Display the specified queue details.
-     *
-     * KEBUTUHAN PRAKTIKUM (IDOR Vulnerability):
-     * Celah keamanan di mana controller langsung mengambil data Queue berdasarkan ID tanpa
-     * memverifikasi apakah queue tersebut benar-benar milik pasien yang sedang login (patient_id).
-     */
     public function show(string $id): View
     {
+        $patient = auth()->user()->patient;
+        if (! $patient) {
+            abort(403, 'Profil pasien tidak ditemukan.');
+        }
+
         $queue = Queue::with(['doctorSchedule.doctor', 'polyclinic', 'doctor'])->findOrFail($id);
+
+        if ($queue->patient_id !== $patient->id) {
+            abort(403, 'Anda tidak diizinkan untuk melihat detail antrean ini.');
+        }
 
         return view('patients.queues.show', compact('queue'));
     }
 
     /**
      * Cancel the specified queue.
-     *
-     * KEBUTUHAN PRAKTIKUM (IDOR Vulnerability):
-     * Celah keamanan di mana pasien mana pun bisa membatalkan antrean pasien lain hanya
-     * dengan mengetahui ID antrean tersebut melalui parameter request.
      */
     public function destroy(string $id): RedirectResponse
     {
+        $patient = auth()->user()->patient;
+        if (! $patient) {
+            abort(403, 'Profil pasien tidak ditemukan.');
+        }
+
         $queue = Queue::findOrFail($id);
+
+        if ($queue->patient_id !== $patient->id) {
+            abort(403, 'Anda tidak diizinkan untuk membatalkan antrean ini.');
+        }
+
         $queue->update(['status' => 'batal']);
 
         return redirect()->route('patients.queues.index')->with('success', 'Antrean berhasil dibatalkan.');

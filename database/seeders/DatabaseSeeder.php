@@ -15,20 +15,28 @@ class DatabaseSeeder extends Seeder
     {
         // User::factory(10)->create();
 
-        // Versi Aman (Password di-hash & Kuat):
-        // \App\Models\User::create([
-        //     'name' => 'Petugas Klinik',
-        //     'email' => 'petugas@klinik.test',
-        //     'password' => \Illuminate\Support\Facades\Hash::make('PetugasKlinik123'),
-        //     'role' => 'petugas',
-        // ]);
-
-        // Versi Rentan (Plaintext & Lemah):
+        // Create Officer Account for Scan / Testing
         User::create([
             'name' => 'Petugas Klinik',
             'email' => 'petugas@klinik.test',
-            'password' => 'admin123',
+            'password' => 'admin12345', // Auto-hashed via User model cast
             'role' => 'petugas',
+        ]);
+
+        // Create Patient Account for Scan / Testing
+        $patientUser = User::create([
+            'name' => 'Pasien Klinik',
+            'email' => 'pasien@klinik.test',
+            'password' => 'pasien12345', // Auto-hashed via User model cast
+            'role' => 'pasien',
+        ]);
+
+        // Create associated Patient profile
+        $patientUser->patient()->create([
+            'phone' => '081234567890',
+            'gender' => 'laki-laki',
+            'birth_date' => '1995-10-10',
+            'address' => 'Jl. Sehat Sentosa No. 10',
         ]);
     }
 }

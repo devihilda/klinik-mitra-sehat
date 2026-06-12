@@ -373,9 +373,9 @@ class QueueTest extends TestCase
     }
 
     /**
-     * Test Insecure Direct Object Reference (IDOR) on Patient Show.
+     * Test prevention of IDOR on Patient Show.
      */
-    public function test_patient_can_exploit_idor_to_view_other_patients_queue_details(): void
+    public function test_patient_cannot_view_other_patients_queue_details(): void
     {
         // Patient B registers a queue
         $queueB = Queue::create([
@@ -394,15 +394,14 @@ class QueueTest extends TestCase
             ->actingAs($this->patientUserA)
             ->get(route('patients.queues.show', $queueB->id));
 
-        // It should succeed with 200 OK because the controller does not verify ownership (IDOR celah)
-        $response->assertOk();
-        $response->assertSee('Rahasia Rekam Medis Pasien B');
+        // It should fail with 403 Forbidden
+        $response->assertStatus(403);
     }
 
     /**
-     * Test Insecure Direct Object Reference (IDOR) on Patient Destroy (Cancel).
+     * Test prevention of IDOR on Patient Destroy (Cancel).
      */
-    public function test_patient_can_exploit_idor_to_cancel_other_patients_queue(): void
+    public function test_patient_cannot_cancel_other_patients_queue(): void
     {
         // Patient B registers a queue
         $queueB = Queue::create([
@@ -421,11 +420,11 @@ class QueueTest extends TestCase
             ->actingAs($this->patientUserA)
             ->delete(route('patients.queues.destroy', $queueB->id));
 
-        // It should successfully redirect and update the queue status to 'batal'
-        $response->assertRedirect(route('patients.queues.index'));
+        // It should fail with 403 Forbidden
+        $response->assertStatus(403);
         $this->assertDatabaseHas('queues', [
             'id' => $queueB->id,
-            'status' => 'batal', // Celah keamanan IDOR berhasil dieksploitasi!
+            'status' => 'menunggu',
         ]);
     }
 }
