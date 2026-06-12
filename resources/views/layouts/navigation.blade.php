@@ -20,6 +20,27 @@
                         <x-nav-link :href="route('patients.index')" :active="request()->routeIs('patients.*')">
                             {{ __('Manajemen Pasien') }}
                         </x-nav-link>
+                        <x-nav-link :href="route('medical-records.index')" :active="request()->routeIs('medical-records.*')">
+                            {{ __('Rekam Medis') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('polyclinics.index')" :active="request()->routeIs('polyclinics.*')">
+                            {{ __('Manajemen Poli') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('doctors.index')" :active="request()->routeIs('doctors.*')">
+                            {{ __('Manajemen Dokter') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('doctor-schedules.index')" :active="request()->routeIs('doctor-schedules.*')">
+                            {{ __('Jadwal Dokter') }}
+                        </x-nav-link>
+                        <x-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')">
+                            {{ __('Manajemen Antrean') }}
+                        </x-nav-link>
+                    @endif
+
+                    @if (Auth::user()->role === 'pasien')
+                        <x-nav-link :href="route('patients.queues.index')" :active="request()->routeIs('patients.queues.*')">
+                            {{ __('Antrean Saya') }}
+                        </x-nav-link>
                     @endif
                 </div>
             </div>
@@ -80,6 +101,27 @@
             @if (Auth::user()->role === 'petugas')
                 <x-responsive-nav-link :href="route('patients.index')" :active="request()->routeIs('patients.*')">
                     {{ __('Manajemen Pasien') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('medical-records.index')" :active="request()->routeIs('medical-records.*')">
+                    {{ __('Rekam Medis') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('polyclinics.index')" :active="request()->routeIs('polyclinics.*')">
+                    {{ __('Manajemen Poli') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('doctors.index')" :active="request()->routeIs('doctors.*')">
+                    {{ __('Manajemen Dokter') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('doctor-schedules.index')" :active="request()->routeIs('doctor-schedules.*')">
+                    {{ __('Jadwal Dokter') }}
+                </x-responsive-nav-link>
+                <x-responsive-nav-link :href="route('queues.index')" :active="request()->routeIs('queues.*')">
+                    {{ __('Manajemen Antrean') }}
+                </x-responsive-nav-link>
+            @endif
+
+            @if (Auth::user()->role === 'pasien')
+                <x-responsive-nav-link :href="route('patients.queues.index')" :active="request()->routeIs('patients.queues.*')">
+                    {{ __('Antrean Saya') }}
                 </x-responsive-nav-link>
             @endif
         </div>

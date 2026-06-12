@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Http\Controllers\Patient;
+namespace App\Http\Controllers\Officer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Patient;

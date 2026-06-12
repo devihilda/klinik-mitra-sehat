@@ -1,5 +1,13 @@
 <?php
 
+use App\Http\Controllers\Officer\DoctorController;
+use App\Http\Controllers\Officer\DoctorScheduleController;
+use App\Http\Controllers\Officer\MedicalRecordController;
+use App\Http\Controllers\Officer\PatientController;
+use App\Http\Controllers\Officer\PolyclinicController;
+use App\Http\Controllers\Officer\QueueController as OfficerQueueController;
+use App\Http\Controllers\Patient\DashboardController;
+use App\Http\Controllers\Patient\QueueController as PatientQueueController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -21,14 +29,20 @@ Route::get('/dashboard', function () {
 
 // Grup Rute Pasien (Terproteksi Middleware Role mode rentan)
 Route::middleware(['auth', 'role:pasien'])->prefix('pasien')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Patient\DashboardController::class, 'index'])->name('patients.dashboard');
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('patients.dashboard');
+    Route::resource('queues', PatientQueueController::class)->except(['edit', 'update'])->names('patients.queues');
 });
 
 // Grup Rute Petugas / Admin (Terproteksi Middleware Role mode rentan)
 Route::middleware(['auth', 'role:petugas'])->prefix('petugas')->group(function () {
-    Route::get('/dashboard', [\App\Http\Controllers\Officer\DashboardController::class, 'index'])->name('officers.dashboard');
+    Route::get('/dashboard', [App\Http\Controllers\Officer\DashboardController::class, 'index'])->name('officers.dashboard');
 
-    Route::resource('patients', \App\Http\Controllers\Patient\PatientController::class);
+    Route::resource('patients', PatientController::class);
+    Route::resource('medical-records', MedicalRecordController::class);
+    Route::resource('polyclinics', PolyclinicController::class);
+    Route::resource('doctors', DoctorController::class);
+    Route::resource('doctor-schedules', DoctorScheduleController::class);
+    Route::resource('queues', OfficerQueueController::class);
 });
 
 Route::middleware('auth')->group(function () {

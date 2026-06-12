@@ -36,4 +36,20 @@ class Patient extends Model
     {
         return $this->belongsTo(User::class);
     }
+
+    /**
+     * Get the medical records for the patient.
+     */
+    public function medicalRecords()
+    {
+        return $this->hasMany(MedicalRecord::class);
+    }
+
+    /**
+     * Get the queues for the patient.
+     */
+    public function queues()
+    {
+        return $this->hasMany(Queue::class);
+    }
 }
