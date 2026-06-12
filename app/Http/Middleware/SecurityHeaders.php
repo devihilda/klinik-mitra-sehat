@@ -9,6 +9,11 @@ use Symfony\Component\HttpFoundation\Response;
 class SecurityHeaders
 {
     /**
+     * The strict Content-Security-Policy applied to all responses.
+     */
+    private const CSP = "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self' data:; script-src 'self'; style-src 'self'; connect-src 'self'";
+
+    /**
      * Handle an incoming request.
      *
      * @param  Closure(Request): (Response)  $next
@@ -27,14 +32,11 @@ class SecurityHeaders
             $response->headers->remove('X-Powered-By');
         }
 
-        // Apply OWASP recommended security headers
-        if (! app()->environment('local')) {
-            $response->headers->set('Content-Security-Policy', "default-src 'self'; base-uri 'self'; object-src 'none'; frame-ancestors 'none'; form-action 'self'; img-src 'self' data:; font-src 'self' data:; script-src 'self'; style-src 'self' 'unsafe-inline'; connect-src 'self';");
-        }
+        // Apply OWASP recommended security headers to ALL environments
+        $response->headers->set('Content-Security-Policy', self::CSP);
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
-        $response->headers->set('X-XSS-Protection', '1; mode=block');
 
         // Permissions-Policy: restrict sensitive browser features
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()');

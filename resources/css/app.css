@@ -50,3 +50,15 @@
   src: url('/fonts/instrument-sans-latin-600-normal.woff2') format('woff2');
 }
 
+/* Alpine.js: hide elements with x-cloak until Alpine initializes */
+[x-cloak] {
+  display: none !important;
+}
+
+/* SVG blend mode utilities (replaces inline style attributes for CSP compliance) */
+.blend-hard-light {
+  mix-blend-mode: hard-light;
+}
+.blend-plus-darker {
+  mix-blend-mode: plus-darker;
+}

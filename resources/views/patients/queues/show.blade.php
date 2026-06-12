@@ -92,9 +92,10 @@
                     <!-- Barcode Mockup for Premium Ticket Aesthetics -->
                     <div class="pt-4 flex flex-col items-center justify-center space-y-2 opacity-80">
                         <div class="flex items-center space-x-0.5">
-                            @for ($i = 0; $i < 24; $i++)
-                                <div class="bg-slate-800 dark:bg-slate-200" style="width: {{ rand(1, 4) }}px; height: 32px;"></div>
-                            @endfor
+                            @php $barcodeWidths = ['w-px','w-0.5','w-1','w-px','w-0.5','w-1','w-px','w-0.5','w-px','w-1','w-0.5','w-px','w-1','w-px','w-0.5','w-1','w-px','w-0.5','w-px','w-1','w-0.5','w-px','w-1','w-px']; @endphp
+                            @foreach ($barcodeWidths as $bw)
+                                <div class="bg-slate-800 dark:bg-slate-200 h-8 {{ $bw }}"></div>
+                            @endforeach
                         </div>
                         <span class="text-[9px] font-mono text-slate-400 dark:text-slate-500 uppercase tracking-widest">KMS-ANT-{{ str_pad($queue->id, 6, '0', STR_PAD_LEFT) }}</span>
                     </div>

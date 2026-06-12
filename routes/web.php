@@ -9,19 +9,28 @@ use App\Http\Controllers\Officer\QueueController as OfficerQueueController;
 use App\Http\Controllers\Patient\DashboardController;
 use App\Http\Controllers\Patient\QueueController as PatientQueueController;
 use App\Http\Controllers\ProfileController;
+use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
+use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Route;
+use Illuminate\View\Middleware\ShareErrorsFromSession;
 
 Route::get('/', function () {
     return view('welcome');
 });
 
-Route::get('/robots.txt', function () {
-    return response("User-agent: *\nDisallow:", 200)
-        ->header('Content-Type', 'text/plain; charset=UTF-8');
-});
+// Stateless routes: no session, no CSRF cookie
+Route::withoutMiddleware([
+    StartSession::class,
+    VerifyCsrfToken::class,
+    ShareErrorsFromSession::class,
+])->group(function () {
+    Route::get('/robots.txt', function () {
+        return response("User-agent: *\nDisallow:", 200)
+            ->header('Content-Type', 'text/plain; charset=UTF-8');
+    });
 
-Route::get('/sitemap.xml', function () {
-    $xml = '<?xml version="1.0" encoding="UTF-8"?>
+    Route::get('/sitemap.xml', function () {
+        $xml = '<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
         <loc>'.url('/').'</loc>
@@ -30,8 +39,9 @@ Route::get('/sitemap.xml', function () {
     </url>
 </urlset>';
 
-    return response($xml, 200)
-        ->header('Content-Type', 'application/xml; charset=UTF-8');
+        return response($xml, 200)
+            ->header('Content-Type', 'application/xml; charset=UTF-8');
+    });
 });
 
 // Redirector /dashboard based on User Role (with commented-out secure and vulnerable logic)
