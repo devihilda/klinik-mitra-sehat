@@ -29,9 +29,7 @@ class LoginRequest extends FormRequest
     public function rules(): array
     {
         return [
-            // Kebutuhan Praktikum: Menggunakan validasi lemah agar bisa diuji (Vulnerability 2: Weak Validation)
-            // 'email' => ['required', 'string', 'email'],
-            'email' => ['required'],
+            'email' => ['required', 'string', 'email'],
             'password' => ['required', 'string'],
         ];
     }
@@ -43,29 +41,17 @@ class LoginRequest extends FormRequest
      */
     public function authenticate(): void
     {
-        // Kebutuhan Praktikum: Menonaktifkan rate limiting untuk simulasi Brute Force
-        // $this->ensureIsNotRateLimited();
+        $this->ensureIsNotRateLimited();
 
-        // Kebutuhan Praktikum: Autentikasi plaintext password manual
-        $user = User::where('email', $this->input('email'))->first();
-
-        // Versi Aman (bawaan Laravel Breeze):
-        // if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
-
-        // Versi Rentan (Plaintext Password Comparison):
-        if (! $user || $user->password !== $this->input('password')) {
-            // Kebutuhan Praktikum: Menonaktifkan pencatatan percobaan gagal pada RateLimiter
-            // RateLimiter::hit($this->throttleKey());
+        if (! Auth::attempt($this->only('email', 'password'), $this->boolean('remember'))) {
+            RateLimiter::hit($this->throttleKey());
 
             throw ValidationException::withMessages([
                 'email' => trans('auth.failed'),
             ]);
         }
 
-        Auth::login($user, $this->boolean('remember'));
-
-        // Kebutuhan Praktikum: Menonaktifkan pembersihan RateLimiter
-        // RateLimiter::clear($this->throttleKey());
+        RateLimiter::clear($this->throttleKey());
     }
 
     /**

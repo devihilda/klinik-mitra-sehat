@@ -24,14 +24,10 @@ class ConfirmablePasswordController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // Versi Aman (Bawaan Laravel dengan Hash):
-        // if (! Auth::guard('web')->validate([
-        //     'email' => $request->user()->email,
-        //     'password' => $request->password,
-        // ])) {
-
-        // Versi Rentan (Plaintext Password Check):
-        if ($request->user()->password !== $request->password) {
+        if (! Auth::guard('web')->validate([
+            'email' => $request->user()->email,
+            'password' => $request->password,
+        ])) {
             throw ValidationException::withMessages([
                 'password' => __('auth.password'),
             ]);

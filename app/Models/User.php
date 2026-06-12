@@ -39,8 +39,8 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
-            // Kebutuhan Praktikum: Mengomentari cast hashed agar password tersimpan sebagai plaintext
-            // 'password' => 'hashed',
+            // Kebutuhan Praktikum: Mengomentari cast hashed agar password tersimpan sebagai plaintext (Dinonaktifkan kembali untuk keamanan)
+            'password' => 'hashed',
         ];
     }
 

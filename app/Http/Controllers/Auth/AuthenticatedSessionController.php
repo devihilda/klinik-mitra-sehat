@@ -26,8 +26,7 @@ class AuthenticatedSessionController extends Controller
     {
         $request->authenticate();
 
-        // Kebutuhan Praktikum: Mengomentari baris regenerasi sesi untuk simulasi Session Fixation
-        // $request->session()->regenerate();
+        $request->session()->regenerate();
 
         return redirect()->intended(route('dashboard', absolute: false));
     }
@@ -39,11 +38,9 @@ class AuthenticatedSessionController extends Controller
     {
         Auth::guard('web')->logout();
 
-        // Kebutuhan Praktikum: Mengomentari invalidasi sesi untuk simulasi Insecure Logout
-        // $request->session()->invalidate();
+        $request->session()->invalidate();
 
-        // Kebutuhan Praktikum: Mengomentari pembuatan ulang token CSRF untuk simulasi CSRF reuse
-        // $request->session()->regenerateToken();
+        $request->session()->regenerateToken();
 
         return redirect('/');
     }

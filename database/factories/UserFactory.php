@@ -28,10 +28,8 @@ class UserFactory extends Factory
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
             'email_verified_at' => now(),
-            // Versi Aman (Password Hashed):
-            // 'password' => static::$password ??= Hash::make('password'),
-            // Versi Rentan (Password Plaintext):
-            'password' => 'password',
+            // Safe Version (Password Hashed):
+            'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
         ];
     }

@@ -8,7 +8,7 @@ use Illuminate\Auth\Events\Registered;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rules;
 use Illuminate\Validation\ValidationException;
 use Illuminate\View\View;
@@ -30,45 +30,36 @@ class RegisteredUserController extends Controller
      */
     public function store(Request $request): RedirectResponse
     {
-        // Versi Aman (Validasi Ketat):
-        // $request->validate([
-        //     'name' => ['required', 'string', 'max:255'],
-        //     'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
-        //     'password' => ['required', 'confirmed', Rules\Password::defaults()],
-        //     'phone' => ['required', 'string', 'max:20'],
-        //     'gender' => ['required', 'in:laki-laki,perempuan'],
-        //     'birth_date' => ['required', 'date'],
-        //     'address' => ['required', 'string', 'max:255'],
-        // ]);
-
-        // Versi Rentan (Weak Validation):
-        $request->validate([
-            'name' => 'required',
-            'email' => 'required',
-            'password' => 'required',
-            'phone' => 'required',
-            'gender' => 'required',
-            'birth_date' => 'required',
-            'address' => 'required',
+        // Safe Version (Strict Validation)
+        $validated = $request->validate([
+            'name' => ['required', 'string', 'max:255'],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            'phone' => ['required', 'string', 'max:20'],
+            'gender' => ['required', 'in:laki-laki,perempuan'],
+            'birth_date' => ['required', 'date'],
+            'address' => ['required', 'string'],
         ]);
 
-        // Versi Aman (Password di-hash):
-        // $user = User::create([
-        //     'name' => $request->name,
-        //     'email' => $request->email,
-        //     'password' => Hash::make($request->password),
-        // ]);
+        // Wrap registration in a database transaction to prevent partial/orphaned records
+        $user = DB::transaction(function () use ($validated) {
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => $validated['password'], // Encrypted automatically by casts on User model
+                'role' => 'pasien', // Force role to 'pasien' to prevent privilege escalation
+            ]);
 
-        // Versi Rentan (Plaintext Password & Mass Assignment):
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => $request->password, // Menyimpan password secara plaintext
-            'role' => 'pasien',
-        ]);
+            // Create patient details by explicitly mapping fields to prevent Mass Assignment vulnerability
+            $user->patient()->create([
+                'phone' => $validated['phone'],
+                'gender' => $validated['gender'],
+                'birth_date' => $validated['birth_date'],
+                'address' => $validated['address'],
+            ]);
 
-        // Menggunakan celah Mass Assignment pada Patient dengan passing direct request
-        $user->patient()->create($request->all());
+            return $user;
+        });
 
         event(new Registered($user));
 
