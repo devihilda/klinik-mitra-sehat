@@ -1,7 +1,7 @@
 # Laporan Remediasi & Hardening Keamanan (OWASP ZAP) - Tahap Final
 ## Proyek: Klinik Mitra Sehat
 
-Laporan ini merinci langkah-langkah remediasi dan pengerasan keamanan (*security hardening*) yang telah selesai diimplementasikan pada aplikasi **Klinik Mitra Sehat** (Laravel 12 & PHP 8.4) berdasarkan perbandingan hasil pemindaian awal dan kedua dari **OWASP ZAP**.
+Laporan ini merinci langkah-langkah remediasi dan pengerasan keamanan (*security hardening*) yang telah selesai diimplementasikan pada aplikasi **Klinik Mitra Sehat** (Laravel 12 & PHP 8.4) berdasarkan perbandingan hasil tiga kali pemindaian dari **OWASP ZAP**.
 
 ---
 
@@ -19,10 +19,20 @@ Laporan ini merinci langkah-langkah remediasi dan pengerasan keamanan (*security
    * *Perbaikan:* Menerapkan kebijakan CSP yang sangat ketat pada seluruh respon non-local via [SecurityHeaders.php](file:///D:/Projek%20Laravel/klinik-mitra-sehat/app/Http/Middleware/SecurityHeaders.php).
 4. **Sub Resource Integrity (SRI) & Cross-Domain Assets (Medium/Low):**
    * *Akar Masalah:* Aplikasi memuat asset Google Fonts dari `fonts.bunny.net` dan memuat asset JS/CSS dari server pengembangan Vite (`http://[::1]:5173`) yang tidak memiliki atribut `integrity`.
-   * *Perbaikan:* Mengunduh semua file font (`Figtree` dan `Instrument Sans`) secara lokal di direktori `public/fonts/`, mengubah referensi `@font-face` di [app.css](file:///D:/Projek%20Laravel/klinik-mitra-sehat/resources/css/app.css), dan menghapus semua link eksternal `fonts.bunny.net` dari file layout Blade. Seluruh asset saat ini disajikan secara *Same-Origin* sehingga meniadakan kebutuhan akan SRI pihak ketiga.
+   * *Perbaikan (Tahap 1 — Self-Hosting):* Mengunduh semua file font (`Figtree` dan `Instrument Sans`) secara lokal di direktori `public/fonts/`, mengubah referensi `@font-face` di [app.css](file:///D:/Projek%20Laravel/klinik-mitra-sehat/resources/css/app.css), dan menghapus semua link eksternal `fonts.bunny.net` dari file layout Blade.
+   * *Perbaikan (Tahap 2 — SRI Hashes):* Menginstal `vite-plugin-manifest-sri` dan mengkonfigurasinya di [vite.config.js](file:///D:/Projek%20Laravel/klinik-mitra-sehat/vite.config.js). Plugin ini menghasilkan hash `sha384` pada setiap entry di `manifest.json`, yang otomatis dirender oleh directive `@vite` Laravel sebagai atribut `integrity` dan `crossorigin="anonymous"` pada tag `<script>` dan `<link>` di production build.
 5. **X-Content-Type-Options Header Missing on /robots.txt (Low):**
    * *Akar Masalah:* Berkas `robots.txt` disajikan sebagai file statis langsung oleh web server, sehingga melewati middleware aplikasi Laravel dan tidak mendapatkan header `nosniff`.
    * *Perbaikan:* Menghapus berkas fisik `public/robots.txt` dan mengalihkannya ke Laravel Route di [web.php](file:///D:/Projek%20Laravel/klinik-mitra-sehat/routes/web.php) agar disajikan dinamis dengan header keamanan lengkap.
+6. **Big Redirect Detected (Low):**
+   * *Akar Masalah:* Laravel mengirimkan response body HTML yang besar (> 400 bytes) pada respons redirect 3xx, yang memicu alert ZAP "Big Redirect Detected (Potential Sensitive Information Leak)".
+   * *Perbaikan:* Menambahkan logika di [SecurityHeaders.php](file:///D:/Projek%20Laravel/klinik-mitra-sehat/app/Http/Middleware/SecurityHeaders.php) yang mendeteksi response 3xx dengan header `Location` dan mengganti body-nya dengan HTML minimal (`<meta http-equiv="refresh">`) berukuran < 200 bytes.
+7. **Permissions-Policy Header Missing (Informational):**
+   * *Akar Masalah:* Tidak ada header `Permissions-Policy` yang membatasi akses ke fitur browser sensitif.
+   * *Perbaikan:* Menambahkan header `Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()` di [SecurityHeaders.php](file:///D:/Projek%20Laravel/klinik-mitra-sehat/app/Http/Middleware/SecurityHeaders.php).
+8. **Strict-Transport-Security (HSTS) Readiness:**
+   * *Akar Masalah:* Header HSTS belum ada.
+   * *Perbaikan:* Menambahkan header `Strict-Transport-Security: max-age=31536000; includeSubDomains` secara kondisional — hanya dikirim ketika koneksi menggunakan HTTPS (`$request->isSecure()`).
 
 ### B. Temuan Sebelumnya yang Berhasil Dipertahankan (Tidak Regresi)
 * **Penyimpanan Password Hashed:** Password tetap disimpan menggunakan enkripsi hash Bcrypt via model cast `'password' => 'hashed'` di `User.php`.
@@ -59,14 +69,14 @@ public/build/assets/app-CoaHkm5D.js   88.61 kB │ gzip: 32.77 kB
 ```
 
 ### B. Hasil `php artisan test`
-Sebanyak **83 tes (272 assertions) Lolos 100%**:
+Sebanyak **87 tes (287 assertions) Lolos 100%**:
 ```text
-Tests:    83 passed (272 assertions)
-Duration: 10.51s
+Tests:    87 passed (287 assertions)
+Duration: 12.39s
 ```
 Menguji aspek:
 * `RegistrationTest` (Validasi input, hashing password, pencegahan manipulasi role).
-* `SecurityHeadersTest` (Memastikan CSP, X-Frame-Options, X-Content-Type-Options aktif pada HTML, robots.txt, sitemap.xml, serta halaman error 404/405).
+* `SecurityHeadersTest` (Memastikan CSP, X-Frame-Options, X-Content-Type-Options, Permissions-Policy aktif pada HTML, robots.txt, sitemap.xml, serta halaman error 404/405; memverifikasi redirect body minimization dan SRI integrity hashes di manifest.json).
 * `ErrorDisclosureTest` (Memastikan tidak ada kebocoran detail internal ketika `APP_DEBUG=false`).
 * `AuthorizationTest` (Membuktikan isolasi rute antara Guest, Pasien, dan Petugas).
 * `QueueTest` (Memastikan IDOR pada detail/pembatalan antrean kini diblokir dengan response 403).
@@ -84,6 +94,7 @@ Menguji aspek:
   X-Content-Type-Options: nosniff
   Referrer-Policy: strict-origin-when-cross-origin
   X-XSS-Protection: 1; mode=block
+  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()
   ```
 * **Robots.txt (GET /robots.txt):**
   ```http
@@ -112,7 +123,7 @@ Menguji aspek:
 3. **Session Lifecycle:** Sesi berhasil diregenerasi setelah login sukses (`session()->regenerate()`) dan di-invalidate sepenuhnya setelah logout (`session()->invalidate()`, `session()->regenerateToken()`), mencegah serangan Session Fixation.
 
 ### B. Audit Redirect (Big Redirect)
-* Empat kasus redirect (GET `/pasien/dashboard` -> `/login`, POST `/forgot-password`, POST `/login`, POST `/register`) telah diperiksa dan dikonfirmasi **aman**. Redirect ini merupakan perilaku normal dari manajemen autentikasi Laravel. Response body hanya berisi HTML pengalihan minimal (< 400 bytes) dan tidak membocorkan data sensitif (password, password_confirmation, API token, dll.). Status: *False Positive / Accepted Low Risk*.
+* Empat kasus redirect (GET `/pasien/dashboard` -> `/login`, POST `/forgot-password`, POST `/login`, POST `/register`) yang sebelumnya menghasilkan body HTML besar kini telah dimitigasi. Middleware `SecurityHeaders` secara otomatis mengganti body redirect 3xx dengan HTML minimal (`<meta http-equiv="refresh">`) berukuran < 200 bytes. Response body tidak membocorkan data sensitif (password, password_confirmation, API token, dll.). Status: *Resolved*.
 
 ---
 
@@ -179,7 +190,9 @@ Untuk memverifikasi hasil dengan akurat menggunakan OWASP ZAP, jalankan aplikasi
   * *Status:* Di tingkat aplikasi, middleware telah membuang header ini. Namun, jika PHP dijalankan di belakang Nginx/Apache, server web atau modul PHP-FPM mungkin menyuntikkan kembali header ini.
   * *Rekomendasi:* Matikan melalui `php.ini` dengan mengatur `expose_php = Off` dan sembunyikan header di server block Nginx/Apache (tidak dapat diubah langsung dari repositori git).
 * **HTTPS & HSTS (Strict-Transport-Security):**
-  * *Status:* HSTS belum diaktifkan di localhost karena protokol HTTP biasa.
-  * *Rekomendasi:* Aktifkan SSL/TLS pada server produksi dan paksa skema HTTPS di `AppServiceProvider` serta tambahkan header HSTS di konfigurasi server web (Nginx/Apache).
+  * *Status:* Header HSTS kini dikirim secara otomatis oleh middleware ketika koneksi menggunakan HTTPS. Pada localhost (HTTP), header ini tidak dikirim karena tidak relevan.
+  * *Rekomendasi:* Aktifkan SSL/TLS pada server produksi dan paksa skema HTTPS di `AppServiceProvider`. Middleware sudah menangani pengiriman header HSTS secara otomatis.
+* **XSRF-TOKEN Cookie No HttpOnly Flag:**
+  * *Status:* Expected behavior. Laravel memerlukan cookie ini agar Axios dapat membaca nilainya dari client-side untuk disematkan di header `X-XSRF-TOKEN`. Dilindungi oleh `SameSite=Lax` dan `Secure` (HTTPS).
 * **Cross-Site Request Forgery (CSRF) on API Routes:**
   * *Status:* Nihil (aplikasi tidak menggunakan rute API eksternal).

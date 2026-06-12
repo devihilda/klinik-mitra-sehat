@@ -36,6 +36,23 @@ class SecurityHeaders
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
         $response->headers->set('X-XSS-Protection', '1; mode=block');
 
+        // Permissions-Policy: restrict sensitive browser features
+        $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()');
+
+        // Strict-Transport-Security (HSTS): only when served over HTTPS
+        if ($request->isSecure()) {
+            $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        }
+
+        // Minimize redirect response body to prevent "Big Redirect Detected" alert
+        $statusCode = $response->getStatusCode();
+        if ($statusCode >= 300 && $statusCode < 400 && $response->headers->has('Location')) {
+            $location = $response->headers->get('Location');
+            $response->setContent(
+                '<html><head><meta http-equiv="refresh" content="0;url='.e($location).'"></head><body></body></html>'
+            );
+        }
+
         return $response;
     }
 }

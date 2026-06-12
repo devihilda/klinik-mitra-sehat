@@ -2,8 +2,8 @@
 
 namespace Tests\Feature;
 
-use App\Models\User;
 use App\Models\Patient;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -12,6 +12,7 @@ class AuthorizationTest extends TestCase
     use RefreshDatabase;
 
     private User $patientUser;
+
     private User $officerUser;
 
     protected function setUp(): void
