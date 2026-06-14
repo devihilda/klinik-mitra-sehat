@@ -33,7 +33,21 @@ class SecurityHeaders
         }
 
         // Apply OWASP recommended security headers to ALL environments
-        $response->headers->set('Content-Security-Policy', self::CSP);
+        if (app()->environment('local')) {
+            $viteCsp = "default-src 'self' http://localhost:5173 http://127.0.0.1:5173 http://*:5173; ".
+                       "base-uri 'self'; ".
+                       "object-src 'none'; ".
+                       "frame-ancestors 'none'; ".
+                       "form-action 'self'; ".
+                       "img-src 'self' data: http://localhost:5173 http://127.0.0.1:5173 http://*:5173; ".
+                       "font-src 'self' data: https://fonts.bunny.net; ".
+                       "script-src 'self' http://localhost:5173 http://127.0.0.1:5173 http://*:5173 'unsafe-inline' 'unsafe-eval'; ".
+                       "style-src 'self' http://localhost:5173 http://127.0.0.1:5173 http://*:5173 'unsafe-inline'; ".
+                       "connect-src 'self' http://localhost:5173 http://127.0.0.1:5173 http://*:5173 ws://localhost:5173 ws://127.0.0.1:5173 ws://*:5173";
+            $response->headers->set('Content-Security-Policy', $viteCsp);
+        } else {
+            $response->headers->set('Content-Security-Policy', self::CSP);
+        }
         $response->headers->set('X-Frame-Options', 'DENY');
         $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
